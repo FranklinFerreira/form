@@ -1,116 +1,99 @@
 <?php
-/**
- * Teste 05:
- * 
- * Este teste requer o uso de banco de dados e a importação do arquivo "db_teste_5.sql"
- * 
- * Este banco de dados possui uma única tabela chamada "categorias" com alguns registros inseridos nela.
- * 
- * Essa tabela representa categorias de uma loja online.
- * 
- * Essa tabela possui a coluna "dona" que serve como "chave estrangeira" para si mesmo.
- * Quando o valor de "dona" for 0, significa que o registro é de uma categoria primária. 
- * 
- * Por Exemplo:
- * Categoria 01 (id = 1, dona = 0 - categoria primária)
- * Categoria 02 (id = 2, dona = 0 - categoria primária)
- * 
- * SubCategoria A (id = 3, dona = 1 - categoria secundária ou subcategoria de "Categoria 01")
- * SubCategoria B (id = 4, dona = 1 - categoria secundária ou subcategoria de "Categoria 01")
- * 
- * SubCategoria X (id = 5, dona = 2 - categoria secundária ou subcategoria de "Categoria 02")
- * SubCategoria Y (id = 6, dona = 2 - categoria secundária ou subcategoria de "Categoria 02")
- * 
- * SubDeSubCategoria Y1 (id = 7, dona = 6 - subcategoria de "SubCategoria Y" que por sua vez já é subcategoria de "Categoria 02")
- * 
- * ##
- * 
- * Essa representação do exemplo gera uma árvore com a seguinte estrutura
- * 
- * | - Categoria 01
- * |       |------- SubCategoria A 
- * |       |------- SubCategoria B 
- * | - Categoria 02
- * |       |------- SubCategoria X
- * |       |------- SubCategoria Y
- * |                    | ---------- SubDeSubCategoria Y1
- * 
- * 
- * 
- * Essa tabela possui a coluna "ativa" que recebe o valor de "s" para categorias ativas, e "n" para categorias inativas.
- * Quando uma categoria for desativada, todas as suas subcategorias, indiferente do "nível de profundidade" da árvore também são consideradas inativas
- * 
- * 
- * O objetivo deste teste é escrever o código da função "ArvoreCategoriasAtivas", que retorne as categorias do banco de dados já estruturadas como uma árvore.
- * Essa função deve:
- *  - Fazer o mínimo de consultas possíveis no banco de dados
- *  - Somente considerar categorias ativas
- *  - Ordenar categorias pelo nome
- * 
- */
-
-
-//a variavel abaixo mostra um retorno esperado para o exemplo acima:
-// var_dump($indice_turmas);
-// $arvore_exemplo = array(
-//     array(
-//         'nome'=>'Categoria 01',
-//         'categorias'=>array(
-//             array(
-//                 'nome'=>'SubCategoria A',
-//                 'categorias'=>array()
-//             ),
-//             array(
-//                 'nome'=>'SubCategoria B',
-//                 'categorias'=>array()
-//             )
-//         )
-//     ),
-//     array(
-//         'nome'=>'Categoria 02',
-//         'categorias'=>array(
-//             array(
-//                 'nome'=>'SubCategoria X',
-//                 'categorias'=>array()
-//             ),
-//             array(
-//                 'nome'=>'SubCategoria Y',
-//                 'categorias'=>array(
-//                     array(
-//                         'nome'=>'SubDeSubCategoria Y1',
-//                         'categorias'=>array()
-//                     )
-//                 )
-//             )
-//         )
-//     )
-// );
-
-
-//Obs: Todas as categorias inseridas no banco de dados estão ativas, você pode desativar elas como preferir para testar sua função
-//Função a ser escrita:
-function ArvoreCategoriasAtivas(){
-
-    $host = "localhost";
-    $usuario = "root";
-    $senha = "";
-    $conexao = mysql_connect($host, $usuario, $senha) or die("A conexao falhou"); //conexao banco servidor
-    mysql_select_db("teste_ideaGood", $conexao) or die ("A conexao com o banco falhou");//conexao banco da aplicação
-    
-    $sql = "SELECT * FROM categorias WHERE ativa='s' ORDER BY nome";
-    $resultado = mysql_query($sql) or die ("erro BD");
-    $arvore_cat = array();
-    $i = 1;
-    while ( $registro = mysql_fetch_array($resultado) )
-    {
-        $arvore_cat[$i]['id'] = $registro["id"];
-        $arvore_cat[$i]['id_pai'] = $registro["dona"];
-        $arvore_cat[$i]['nome'] = $registro["nome"];
-        $i++;
-    }
-    mysql_free_result($resultado);
-    return $arvore_cat;
-}
-$arvore_resultado = ArvoreCategoriasAtivas();
-print_r($arvore_resultado);
+    $principal = $_REQUEST['valor_inicial'];
+    $meses = $_REQUEST['meses'];
+    $taxa = $_REQUEST['taxa_de_juros'];
+    $Valor_parcela = Calcular_parcelas($principal, $meses, $taxa);
+    $Valor_juros = Calcular_juros($Valor_parcela, $principal, $meses);
+    $valor_total = $Valor_parcela * $meses;
 ?>
+<!Doctype html>
+<html>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
+        <title>Calculadora de Juros Compostos</title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+        <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+        <!-- <link rel="stylesheet" href="calculadoras.css"> -->
+    </head>
+    <script type="text/javascript">
+        function info(){
+          var confirmado = confirm('Para uma melhor experiência, todos os campos devem estar preenchidos corretamente.');
+          if(confirmado){
+            alert('Entendido!');
+          }else{
+            alert('Preciso de Ajudar');
+          }
+        }
+    </script>
+    <body>
+        <div class="container">
+            <form class="w-100" method="post" id="formCalc" action="">
+                <label for="basic-url">Valor Financiado:</label>
+                <div class="input-group mb-3 rounded-0">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text rounded-0 bg-warning"><strong>R$</strong></span>
+                    </div>
+                    <input class="form-control border border-warning border-top-0 border-right-0 border-left-0" type="number" step="0.01" id="valor_inicial" name="valor_inicial" min="0.00" max="9999999999.00" required>
+                </div>
+                <label for="basic-url">Valor da Prestação:</label>
+                <div class="input-group mb-3 rounded-0">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text rounded-0 bg-warning"><strong>R$</strong></span>
+                    </div>
+                    <input class="form-control currency border border-warning border-top-0 border-right-0 border-left-0" type="number" step="0.01" id="valor_mensal" name="valor_mensal" min="0.00" max="9999999999.00" required>
+                </div>
+                <label for="basic-url">Nº de Meses:</label>
+                <div class="input-group mb-3 rounded-0">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text rounded-0 bg-warning"><strong>&#x1F550</strong></span>
+                    </div>
+                    <input class="form-control currency border border-warning border-top-0 border-right-0 border-left-0" type="number" id="meses" name="meses" min="1" placeholder="Meses" required>
+                </div>
+                <label for="basic-url">Taxa de Juros Mensal:</label>
+                <div class="input-group mb-3 rounded-0">
+                    <div class="input-group-prepend">
+                        <span class="input-group-text rounded-0 bg-warning"><strong>%</strong></span>
+                    </div>
+                    <input class="form-control currency border border-warning border-top-0 border-right-0 border-left-0" type="number" step="0.01" id="taxa_de_juros" name="taxa_de_juros" min="0.01" max="9999999999.00" required>
+                </div>
+                <div class="form-group">
+                    <button class="btn btn-warning" type="submit" value="Calcular" onclick="info()" name="button" id="button">Calcular</button>
+                </div>
+            </form>
+
+            <div class="row d-flex justify-content-center">
+                <div class="card" style="width: 15rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">Valor Financiado: </h5>
+                        <p class="card-text" id="inicial"><strong>R$ </strong><?=$principal?></p>
+                    </div>
+                </div>
+                <div class="card" style="width: 15rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">Valor da Prestação: </h5>
+                        <p class="card-text" id="mensal"><strong>R$ </strong><br><small id="juros"><?=$Valor_parcela?></small></p>
+                    </div>
+                </div>
+                <div class="card" style="width: 15rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">Nº de Meses: </h5>
+                        <p class="card-text" id="duracao"><strong>Meses: </strong><?=$meses?></p>
+                    </div>
+                </div>
+                <div class="card" style="width: 15rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">Juros Pagos: </h5>
+                        <p class="card-text" id="juros_recebidos"><strong>R$ </strong><?=$Valor_juros;?></p>
+                    </div>
+                </div>
+                <div class="card" style="width: 15rem;">
+                    <div class="card-body">
+                        <h5 class="card-title">Valor Total c/ Juros: </h5>
+                        <p class="card-text" id="a_receber"><strong>R$ </strong><?=$valor_total;?></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
